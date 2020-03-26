@@ -15,7 +15,7 @@
   "bugs": {
     "url": "https://github.com/StudentVue-Community/StudentVue.js/issues"
   },
-  "homepage": "https://github.com/StudentVue-Community/StudentVue.js#readme",
+  "homepage": "https://github.com/StudentVue-Community",
   "dependencies": {
     "request": "^2.88.2",
     "xml2json": "^0.12.0"

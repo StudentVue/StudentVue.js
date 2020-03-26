@@ -4,6 +4,8 @@ Node.js StudentVue library
 
 # Usage
 
+Install with `npm install studentvue.js`
+
 ### getUrls
 
 Find URLs for gradebook servers
