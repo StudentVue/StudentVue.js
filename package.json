@@ -7,8 +7,11 @@
     "type": "git",
     "url": "git+https://github.com/StudentVue-Community/StudentVue.js.git"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
   "author": "LoganMD",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/StudentVue-Community/StudentVue.js/issues"
   },

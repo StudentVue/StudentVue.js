@@ -69,7 +69,7 @@ class StudentVueClient {
         return servicePromise.then(result => xml2json.toJson(result[0].ProcessWebServiceRequestResult));
     }
 
-    _makeServiceRequest(methodName, params = {}) {
+    _makeServiceRequest(methodName, params = {}, serviceHandle = 'PXPWebServices') {
         let paramStr = '&lt;Parms&gt;';
         Object.entries(params).forEach(([key, value]) => {
             paramStr += '&lt;' + key + '&gt;';
@@ -83,7 +83,7 @@ class StudentVueClient {
             password: this.password,
             skipLoginLog: 1,
             parent: 0,
-            webServiceHandleName: 'PXPWebServices',
+            webServiceHandleName: serviceHandle,
             methodName,
             paramStr
         });
@@ -105,4 +105,18 @@ function login(url, username, password, soapOptions = {}) {
         .then(client => new StudentVueClient(username, password, client));
 }
 
-module.exports = { login };
+function getDistrictUrls(zipCode) {
+    return soap.createClientAsync('https://support.edupoint.com/Service/HDInfoCommunication.asmx?WSDL', {
+        endpoint: 'https://support.edupoint.com/Service/HDInfoCommunication.asmx',
+        escapeXML: false
+    })
+        .then(client => {
+            const supportClient = new StudentVueClient('EdupointDistrictInfo', 'Edup01nt', client);
+            return supportClient._xmlJsonSerialize(supportClient._makeServiceRequest('GetMatchingDistrictList', {
+                MatchToDistrictZipCode: zipCode,
+                Key: '5E4B7859-B805-474B-A833-FDB15D205D40' // idk how safe this is
+            }, 'HDInfoServices'));
+        });
+}
+
+module.exports = { login, getDistrictUrls };

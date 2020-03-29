@@ -1,109 +1,55 @@
 # StudentVue.js
 
-Node.js StudentVue library
+Node.js Library for interacting with StudentVue portals.
 
-# Usage
+## Installation
 
 Install with `npm install studentvue.js`
 
-### getUrls
+## Basic Usage
 
-Find URLs for gradebook servers
+Logging in and getting messages:
 
 ```javascript
-const studentvue = require("studentvue.js")
-
-studentvue.getUrls(12345).then(response => {
-  console.log(response)
-})
+const StudentVue = require('studentvue.js');
+StudentVue.login('district url', 'username', 'password')
+    .then(client => client.getMessages())
+    .then(console.log);
 ```
 
-Example response
+Getting districts near a zip code:
 
 ```javascript
-[
-  {
-    DistrictID: '', //DistrictID is usually blank
-    Name: 'LoganMD Unified School District',
-    Address: 'The ISS',
-    PvueURL: 'https://loganMD-rocks.edupoint.com/'
-  },
-  {
-    DistrictID: '',
-    Name: 'stupid example school district',
-    Address: 'idk',
-    PvueURL: 'https://bruh.edupoint.com/'
-  }
-]
-```
-
-### getGrades
-
-Gets current grades/classes
-
-```javascript
-const studentvue = require("studentvue.js")
-
-studentvue.getGrades("url", "id", "password").then(response => {
-  console.log(response)
-})
-```
-
-Example response (Marks are grades/assignments)
-
-```javascript
-[
-  {
-    Period: '1',
-    Title: 'JavaScript class',
-    Room: '42069',
-    Staff: 'LoganMD',
-    StaffEMail: 'logans@fancy.email',
-    StaffGU: '123456789',
-    Marks: { Mark: [Object] }
-  }
-]
-```
-
-Marks Example
-
-```javascript
+const StudentVue = require('studentvue.js');
+StudentVue.getDistrictUrls('zip code').then(console.log);
 {
-  Mark: {
-    MarkName: 'S2',
-    CalculatedScoreString: 'A+',
-    CalculatedScoreRaw: '100.0',
-    StandardViews: {},
-    GradeCalculationSummary: { AssignmentGradeCalc: [Array] },
-    Assignments: { Assignment: [Array] }
-  }
-}
-```
-
-Assignments Example
-
-```javascript
-{
-  Assignment: [
-    {
-      GradebookID: '12345',
-      Measure: 'Do your work', //assignment name
-      Type: 'Assignments',
-      Date: '3/5/2020', //date assigned
-      DueDate: '3/5/2020',
-      Score: 'Not Graded',
-      ScoreType: 'Raw Score',
-      Points: '10.0000 Points Possible',
-      Notes: '',
-      TeacherID: '123456',
-      StudentID: '789',
-      MeasureDescription: '',
-      HasDropBox: 'false',
-      DropStartDate: '3/5/2020',
-      DropEndDate: '3/6/2020',
-      Resources: {},
-      Standards: {}
+    "DistrictLists": {
+        "xmlns:xsd": "http://www.w3.org/2001/XMLSchema",
+        "xmlns:xsi":"http://www.w3.org/2001/XMLSchema-instance",
+        "DistrictInfos": {
+            "DistrictInfo": [
+                {"DistrictID":"","Name":"San Francisco Unified School District","Address":"San Francisco CA 94102","PvueURL":"https://portal.sfusd.edu/"}
+                ...
+            ]
+        }
     }
-  ]
 }
 ```
+
+## Methods
+
+Example responses and more documentation to come.
+
+### StudentVueClient.getMessages() - get messages from teachers / school
+### StudentVueClient.getCalendar() - get assignments / events from calendar
+### StudentVueClient.getAttendance() - get past attendance
+### StudentVueClient.getGradebook([, reportPeriod]) - get grades and assignments from the specified reporting period, or the current grades if no reporting period is specified
+### StudentVueClient.getClassNotes() - get provided class notes
+### StudentVueClient.getStudentInfo() - get school's info on the student
+### StudentVueClient.getSchedule([, termIndex]) - get student's schedule from the specified term, or the current schedule if no term is specified
+### StudentVueClient.getSchoolInfo() - get school info
+### StudentVueClient.listReportCards() - list all uploaded report card documents
+### StudentVueClient.getReportCard(documentGuid) - get content of a report card document by it's guid
+### StudentVueClient.listDocuments() - list all uploaded documents
+### StudentVueClient.getDocument(documentGuid) - get content of a document by it's guid
+
