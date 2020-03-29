@@ -1,42 +1,108 @@
-const request = require("request")
-let xmlParser = require('xml2json');
+const soap = require('soap');
+const xml2json = require('xml2json');
 
+class StudentVueClient {
+    constructor(username, password, client) {
+        this.username = username;
+        this.password = password;
 
-function getGrades(url, id, password) {
-  return new Promise(resolve => {
-    request.post({
-      url: url + '//Service/PXPCommunication.asmx',
-      headers: {
-        'Content-Type': 'text/xml',
-        'SOAPAction': 'http://edupoint.com/webservices/ProcessWebServiceRequest'
-      },
-      body: '<v:Envelope xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns:d="http://www.w3.org/2001/XMLSchema" xmlns:c="http://schemas.xmlsoap.org/soap/encoding/" xmlns:v="http://schemas.xmlsoap.org/soap/envelope/"><v:Header /><v:Body><ProcessWebServiceRequest xmlns="http://edupoint.com/webservices/" id="o0" c:root="1"><userID i:type="d:string">' + id.toString() + '</userID><password i:type="d:string">' + password.toString() + '</password><skipLoginLog i:type="d:string">true</skipLoginLog><parent i:type="d:string">false</parent><webServiceHandleName i:type="d:string">PXPWebServices</webServiceHandleName><methodName i:type="d:string">Gradebook</methodName><paramStr i:type="d:string">&lt;Parms&gt;&lt;ChildIntID&gt;0&lt;/ChildIntID&gt;&lt;/Parms&gt;</paramStr></ProcessWebServiceRequest></v:Body></v:Envelope>'
-    }, (error, response, body) => {
-      if (!error && response.statusCode == 200) {
-        const res2 = xmlParser.toJson(JSON.parse(xmlParser.toJson(body))["soap:Envelope"]["soap:Body"]["ProcessWebServiceRequestResponse"]["ProcessWebServiceRequestResult"])
-        resolve(JSON.parse(res2)["Gradebook"]["Courses"]["Course"])
-      }
-    })
-  })
+        this.client = client;
+    }
+
+    getMessages() {
+        return this._xmlJsonSerialize(this._makeServiceRequest('GetPXPMessages'));
+    }
+
+    getCalendar() {
+        return this._xmlJsonSerialize(this._makeServiceRequest('StudentCalendar'));
+    }
+
+    getAttendance() {
+        return this._xmlJsonSerialize(this._makeServiceRequest('Attendance'));
+    }
+
+    getGradebook(reportPeriod) {
+        let params = {};
+        if (typeof reportPeriod !== 'undefined') {
+            params.ReportPeriod = reportPeriod;
+        }
+        return this._xmlJsonSerialize(this._makeServiceRequest('Gradebook', params));
+    }
+
+    getClassNotes() {
+        return this._xmlJsonSerialize(this._makeServiceRequest('StudentHWNotes'));
+    }
+
+    getStudentInfo() {
+        return this._xmlJsonSerialize(this._makeServiceRequest('StudentInfo'));
+    }
+
+    getSchedule(termIndex) {
+        let params = {};
+        if (typeof termIndex !== 'undefined') {
+            params.TermIndex = termIndex;
+        }
+        return this._xmlJsonSerialize(this._makeServiceRequest('StudentClassList'));
+    }
+
+    getSchoolInfo() {
+        return this._xmlJsonSerialize(this._makeServiceRequest('StudentSchoolInfo'));
+    }
+
+    listReportCards() {
+        return this._xmlJsonSerialize(this._makeServiceRequest('GetReportCardInitialData'));
+    }
+
+    getReportCard(documentGuid) {
+        return this._xmlJsonSerialize(this._makeServiceRequest('GetReportCardDocumentData', { DocumentGU: documentGuid }));
+    }
+
+    listDocuments() {
+        return this._xmlJsonSerialize(this._makeServiceRequest('GetStudentDocumentInitialData'));
+    }
+
+    getDocument(documentGuid) {
+        return this._xmlJsonSerialize(this._makeServiceRequest('GetContentOfAttachedDoc', { DocumentGU: documentGuid }));
+    }
+
+    _xmlJsonSerialize(servicePromise) {
+        return servicePromise.then(result => xml2json.toJson(result[0].ProcessWebServiceRequestResult));
+    }
+
+    _makeServiceRequest(methodName, params = {}) {
+        let paramStr = '&lt;Parms&gt;';
+        Object.entries(params).forEach(([key, value]) => {
+            paramStr += '&lt;' + key + '&gt;';
+            paramStr += value;
+            paramStr += '&lt;/' + key + '&gt;';
+        });
+        paramStr += '&lt;/Parms&gt;';
+
+        return this.client.ProcessWebServiceRequestAsync({
+            userID: this.username,
+            password: this.password,
+            skipLoginLog: 1,
+            parent: 0,
+            webServiceHandleName: 'PXPWebServices',
+            methodName,
+            paramStr
+        });
+    }
 }
 
-function getUrls(zip) {
-  return new Promise(resolve => {
-    request.post({
-      url: 'https://support.edupoint.com/Service/HDInfoCommunication.asmx',
-      headers: {
-        'Content-Type': 'text/xml',
-        'SOAPAction': 'http://edupoint.com/webservices/ProcessWebServiceRequest'
-      },
-      body: '<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><ProcessWebServiceRequest xmlns="http://edupoint.com/webservices/"><userID>EdupointDistrictInfo</userID><password>Edup01nt</password><skipLoginLog>1</skipLoginLog><parent>0</parent><webServiceHandleName>HDInfoServices</webServiceHandleName><methodName>GetMatchingDistrictList</methodName><paramStr>&lt;Parms&gt;&lt;Key&gt;5E4B7859-B805-474B-A833-FDB15D205D40&lt;/Key&gt;&lt;MatchToDistrictZipCode&gt;' + zip.toString() + '&lt;/MatchToDistrictZipCode&gt;&lt;/Parms&gt;</paramStr></ProcessWebServiceRequest></soap:Body></soap:Envelope>'
-    }, (error, response, body) => {
-      if (!error && response.statusCode == 200) {
-        const res = xmlParser.toJson(JSON.parse(xmlParser.toJson(body))["soap:Envelope"]["soap:Body"]["ProcessWebServiceRequestResponse"]["ProcessWebServiceRequestResult"])
-        resolve(JSON.parse(res)["DistrictLists"]["DistrictInfos"]["DistrictInfo"]);
-      }
-    })
-  })
+function login(url, username, password, soapOptions = {}) {
+    const hostName = new URL(url).hostname;
+    const endpoint = `https://${ hostName }/Service/PXPCommunication.asmx`;
+
+    const resolvedOptions = Object.assign({
+        endpoint: endpoint, // enforces https
+        escapeXML: false
+    }, soapOptions);
+
+    const wsdlURL = endpoint + '?WSDL';
+
+    return soap.createClientAsync(wsdlURL, resolvedOptions)
+        .then(client => new StudentVueClient(username, password, client));
 }
 
-exports.getUrls = getUrls
-exports.getGrades = getGrades
+module.exports = { login };

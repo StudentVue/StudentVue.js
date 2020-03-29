@@ -3,9 +3,6 @@
   "version": "0.0.3",
   "description": "Node.js StudentVue library",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/StudentVue-Community/StudentVue.js.git"
@@ -15,9 +12,9 @@
   "bugs": {
     "url": "https://github.com/StudentVue-Community/StudentVue.js/issues"
   },
-  "homepage": "https://github.com/StudentVue-Community",
+  "homepage": "https://github.com/StudentVue-Community/StudentVue.js",
   "dependencies": {
-    "request": "^2.88.2",
+    "soap": "^0.31.0",
     "xml2json": "^0.12.0"
   }
 }
