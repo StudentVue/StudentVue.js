@@ -1,6 +1,6 @@
 {
   "name": "studentvue.js",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "Node.js StudentVue library",
   "main": "index.js",
   "repository": {
