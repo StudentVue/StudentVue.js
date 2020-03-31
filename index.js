@@ -91,8 +91,8 @@ class StudentVueClient {
 }
 
 function login(url, username, password, soapOptions = {}) {
-    const hostName = new URL(url).hostname;
-    const endpoint = `https://${ hostName }/Service/PXPCommunication.asmx`;
+    const host = new URL(url).host;
+    const endpoint = `https://${ host }/Service/PXPCommunication.asmx`;
 
     const resolvedOptions = Object.assign({
         endpoint: endpoint, // enforces https
