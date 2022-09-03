@@ -42,7 +42,7 @@ class StudentVueClient {
         if (typeof termIndex !== 'undefined') {
             params.TermIndex = termIndex;
         }
-        return this._xmlJsonSerialize(this._makeServiceRequest('StudentClassList'));
+        return this._xmlJsonSerialize(this._makeServiceRequest('StudentClassList', params));
     }
 
     getSchoolInfo() {
