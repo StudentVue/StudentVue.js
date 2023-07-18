@@ -1,23 +1,32 @@
 const soap = require('soap');
 
 class StudentVueClient {
-    constructor(username, password, client) {
+    // serialize should be a function that takes XML input and returns a promise.
+    constructor(username, password, client, serialize) {
         this.username = username;
         this.password = password;
 
         this.client = client;
+
+        if (serialize) {
+            this.serialize = serialize;
+        } else {
+            this.serialize = function (data) {
+                return Promise.resolve(data);
+            };
+        }
     }
 
     getMessages() {
-        return this._xmlJsonSerialize(this._makeServiceRequest('GetPXPMessages'));
+        return this._serialize(this._makeServiceRequest('GetPXPMessages'));
     }
 
     getCalendar() {
-        return this._xmlJsonSerialize(this._makeServiceRequest('StudentCalendar'));
+        return this._serialize(this._makeServiceRequest('StudentCalendar'));
     }
 
     getAttendance() {
-        return this._xmlJsonSerialize(this._makeServiceRequest('Attendance'));
+        return this._serialize(this._makeServiceRequest('Attendance'));
     }
 
     getGradebook(reportPeriod) {
@@ -25,15 +34,15 @@ class StudentVueClient {
         if (typeof reportPeriod !== 'undefined') {
             params.ReportPeriod = reportPeriod;
         }
-        return this._xmlJsonSerialize(this._makeServiceRequest('Gradebook', params));
+        return this._serialize(this._makeServiceRequest('Gradebook', params));
     }
 
     getClassNotes() {
-        return this._xmlJsonSerialize(this._makeServiceRequest('StudentHWNotes'));
+        return this._serialize(this._makeServiceRequest('StudentHWNotes'));
     }
 
     getStudentInfo() {
-        return this._xmlJsonSerialize(this._makeServiceRequest('StudentInfo'));
+        return this._serialize(this._makeServiceRequest('StudentInfo'));
     }
 
     getSchedule(termIndex) {
@@ -41,31 +50,33 @@ class StudentVueClient {
         if (typeof termIndex !== 'undefined') {
             params.TermIndex = termIndex;
         }
-        return this._xmlJsonSerialize(this._makeServiceRequest('StudentClassList', params));
+        return this._serialize(this._makeServiceRequest('StudentClassList', params));
     }
 
     getSchoolInfo() {
-        return this._xmlJsonSerialize(this._makeServiceRequest('StudentSchoolInfo'));
+        return this._serialize(this._makeServiceRequest('StudentSchoolInfo'));
     }
 
     listReportCards() {
-        return this._xmlJsonSerialize(this._makeServiceRequest('GetReportCardInitialData'));
+        return this._serialize(this._makeServiceRequest('GetReportCardInitialData'));
     }
 
     getReportCard(documentGuid) {
-        return this._xmlJsonSerialize(this._makeServiceRequest('GetReportCardDocumentData', { DocumentGU: documentGuid }));
+        return this._serialize(this._makeServiceRequest('GetReportCardDocumentData', { DocumentGU: documentGuid }));
     }
 
     listDocuments() {
-        return this._xmlJsonSerialize(this._makeServiceRequest('GetStudentDocumentInitialData'));
+        return this._serialize(this._makeServiceRequest('GetStudentDocumentInitialData'));
     }
 
     getDocument(documentGuid) {
-        return this._xmlJsonSerialize(this._makeServiceRequest('GetContentOfAttachedDoc', { DocumentGU: documentGuid }));
+        return this.serialize(this._makeServiceRequest('GetContentOfAttachedDoc', { DocumentGU: documentGuid }));
     }
 
-    _xmlJsonSerialize(servicePromise) {
-        return servicePromise.then(result => result[0].ProcessWebServiceRequestResult);
+    _serialize(servicePromise) {
+        return servicePromise.then((result) => {
+            return this.serialize(result[0].ProcessWebServiceRequestResult)
+        });
     }
 
     _makeServiceRequest(methodName, params = {}, serviceHandle = 'PXPWebServices') {
@@ -89,7 +100,7 @@ class StudentVueClient {
     }
 }
 
-function login(url, username, password, soapOptions = {}) {
+function login(url, username, password, soapOptions = {}, serialize) {
     const host = new URL(url).host;
     const endpoint = `https://${ host }/Service/PXPCommunication.asmx`;
 
@@ -99,19 +110,18 @@ function login(url, username, password, soapOptions = {}) {
     }, soapOptions);
 
     const wsdlURL = endpoint + '?WSDL';
-
     return soap.createClientAsync(wsdlURL, resolvedOptions)
-        .then(client => new StudentVueClient(username, password, client));
+        .then(client => new StudentVueClient(username, password, client, serialize));
 }
 
-function getDistrictUrls(zipCode) {
+function getDistrictUrls(zipCode, serialize) {
     return soap.createClientAsync('https://support.edupoint.com/Service/HDInfoCommunication.asmx?WSDL', {
         endpoint: 'https://support.edupoint.com/Service/HDInfoCommunication.asmx',
         escapeXML: false
     })
         .then(client => {
-            const supportClient = new StudentVueClient('EdupointDistrictInfo', 'Edup01nt', client);
-            return supportClient._xmlJsonSerialize(supportClient._makeServiceRequest('GetMatchingDistrictList', {
+            const supportClient = new StudentVueClient('EdupointDistrictInfo', 'Edup01nt', client, serialize);
+            return supportClient._serialize(supportClient._makeServiceRequest('GetMatchingDistrictList', {
                 MatchToDistrictZipCode: zipCode,
                 Key: '5E4B7859-B805-474B-A833-FDB15D205D40' // idk how safe this is
             }, 'HDInfoServices'));
