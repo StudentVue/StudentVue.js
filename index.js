@@ -1,5 +1,4 @@
 const soap = require('soap');
-const xml2json = require('xml2json');
 
 class StudentVueClient {
     constructor(username, password, client) {
@@ -66,7 +65,7 @@ class StudentVueClient {
     }
 
     _xmlJsonSerialize(servicePromise) {
-        return servicePromise.then(result => xml2json.toJson(result[0].ProcessWebServiceRequestResult));
+        return servicePromise.then(result => result[0].ProcessWebServiceRequestResult);
     }
 
     _makeServiceRequest(methodName, params = {}, serviceHandle = 'PXPWebServices') {
