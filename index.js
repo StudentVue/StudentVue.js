@@ -1,11 +1,17 @@
 const xml2json = require("xml2json");
 
 class StudentVueClient {
-  constructor(username, password, endpoint) {
+  constructor(username, password, url) {
     this.username = username;
     this.password = password;
 
+    const host = new URL(url).host;
+    const endpoint = `https://${host}/Service/PXPCommunication.asmx`;
+
+    const wsdlURL = endpoint + "?WSDL";
+
     this.endpoint = endpoint;
+    this.wsdlURL = wsdlURL;
   }
 
   getMessages() {
@@ -99,7 +105,7 @@ class StudentVueClient {
     )}</Parms>`;
     paramStr = paramStr.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
-    return await fetch(this.endpoint, {
+    return await fetch(this.wsdlURL, {
       method: "POST",
       headers: { "Content-Type": "application/soap+xml; charset=utf-8" },
       body: `<?xml version="1.0" encoding="utf-8"?>
@@ -123,13 +129,11 @@ class StudentVueClient {
   }
 }
 
+/**
+ * @deprecated Create an instance of StudentVueClient directly instead
+ */
 function login(url, username, password) {
-  const host = new URL(url).host;
-  const endpoint = `https://${host}/Service/PXPCommunication.asmx`;
-
-  const wsdlURL = endpoint + "?WSDL";
-
-  return new StudentVueClient(username, password, wsdlURL);
+  return new StudentVueClient(username, password, url);
 }
 
 function getDistrictUrls(zipCode) {
