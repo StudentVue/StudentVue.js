@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/StudentVue-Community/StudentVue.js",
   "dependencies": {
-    "soap": "^0.31.0",
+    "soap": "^1.4.1",
     "xml2json": "^0.12.0"
   }
 }
