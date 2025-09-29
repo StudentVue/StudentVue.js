@@ -13,6 +13,10 @@ class StudentVueClient {
         return this._xmlJsonSerialize(this._makeServiceRequest('GetPXPMessages'));
     }
 
+    getMail() {
+        return this._xmlJsonSerialize(this._makeServiceRequest('SynergyMailGetData'));
+    }
+
     getCalendar() {
         return this._xmlJsonSerialize(this._makeServiceRequest('StudentCalendar'));
     }
