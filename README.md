@@ -40,7 +40,8 @@ StudentVue.getDistrictUrls('zip code').then(console.log);
 
 Example responses and more documentation to come.
 
-### StudentVueClient.getMessages() - get messages from teachers / school
+### StudentVueClient.getMessages() - get messages from school
+### StudentVueClient.getMail() - get synergy mail from teachers / school
 ### StudentVueClient.getCalendar() - get assignments / events from calendar
 ### StudentVueClient.getAttendance() - get past attendance
 ### StudentVueClient.getGradebook([, reportPeriod]) - get grades and assignments from the specified reporting period, or the current grades if no reporting period is specified
